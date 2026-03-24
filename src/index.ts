@@ -121,6 +121,13 @@ async function handleCommand(interaction: ChatInputCommandInteraction): Promise<
 
     await interaction.deferReply({ ephemeral: true });
     configStore.reload();
+    
+    try {
+      await infrastructureService.ensureInfrastructure(interaction.client);
+    } catch (error) {
+      logger.error('Failed to setup infrastructure during reload', error instanceof Error ? error.message : error);
+    }
+
     await syncCommands();
     await interaction.editReply({
       embeds: [buildSuccessEmbed(configStore.current, 'Config Reloaded', 'تم إعادة تحميل config.json وتحديث الأوامر.')],
