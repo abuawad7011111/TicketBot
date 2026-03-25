@@ -11,6 +11,10 @@ const ticketControlSchema = z.object({
   emojiId: z.string(),
 });
 
+const statsControlSchema = ticketControlSchema.extend({
+  allowedRoleIds: z.array(z.string()),
+});
+
 const questionSchema = z.object({
   key: z.string().min(1),
   label: z.string().min(1),
@@ -97,6 +101,7 @@ export const appConfigSchema = z.object({
       remove: ticketControlSchema,
       claim: ticketControlSchema,
       pin: ticketControlSchema,
+      stats: statsControlSchema,
     }),
     messages: z.object({
       alreadyOpen: z.string().min(1),
@@ -123,6 +128,9 @@ export const appConfigSchema = z.object({
       panelSend: z.string().min(1),
       panelRefresh: z.string().min(1),
       configReload: z.string().min(1),
+      emojiRefresh: z.string().min(1),
+      ticketClose: z.string().min(1),
+      ticketStats: z.string().min(1),
     }),
   }),
 });

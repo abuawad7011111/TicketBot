@@ -9,7 +9,6 @@ export function componentEmojiFromId(emojiId: string | undefined): APIMessageCom
 
   return {
     id: normalized,
-    name: 'icon',
   };
 }
 
