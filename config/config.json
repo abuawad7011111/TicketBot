@@ -62,9 +62,9 @@
   "panel": {
     "channelId": "",
     "messageId": "",
-    "title": "Support section | قسم الدعم الفني",
-    "subtitle": "مرحباً بكم",
-    "description": "يرجى اختيار سبب فتح التذكرة المناسب لمشكلتك أو استفسارك من القائمة أدناه، ثم أجب على الأسئلة المطلوبة وسيتم إنشاء التذكرة تلقائياً.",
+    "title": "قسم الدعم | STB العرب",
+    "subtitle": "مرحباً بكم 👋",
+    "description": "يرجى اختيار نوع طلبك من القائمة أدناه، ثم أجب على الأسئلة المطلوبة وسيتم إنشاء التذكرة تلقائياً.",
     "menuPlaceholder": "اضغط هنا لفتح تذكرة",
     "menuCustomId": "ticket:open-select",
     "defaultMention": "@everyone",
@@ -72,32 +72,32 @@
     "accentText": "يا هلا؟"
   },
   "ticket": {
-    "welcomeTitle": "اهلاً بك",
-    "welcomeDescription": "في قسم الدعم الفني، يرجى التحلي بالصبر حتى يتمكن أحد أعضاء طاقم الدعم من معالجة مشكلتك.",
-    "summaryTitle": "معلومات التذكرة",
+    "welcomeTitle": "🎫 تم فتح تذكرتك",
+    "welcomeDescription": "أهلاً بك، يرجى التحلي بالصبر حتى يتمكن أحد أعضاء الفريق من معالجة طلبك.",
+    "summaryTitle": "📋 معلومات التذكرة",
     "controls": {
       "close": {
-        "label": "Close",
+        "label": "🔒 إغلاق",
         "style": "Secondary",
         "emojiId": ""
       },
       "add": {
-        "label": "Add",
+        "label": "➕ إضافة",
         "style": "Secondary",
         "emojiId": ""
       },
       "remove": {
-        "label": "Remove",
+        "label": "➖ إزالة",
         "style": "Secondary",
         "emojiId": ""
       },
       "claim": {
-        "label": "Check",
-        "style": "Secondary",
+        "label": "✋ استلام",
+        "style": "Primary",
         "emojiId": ""
       },
       "pin": {
-        "label": "Pin",
+        "label": "📌 تثبيت",
         "style": "Secondary",
         "emojiId": ""
       }
@@ -118,177 +118,74 @@
     "panelIcon": "",
     "ticketIcon": "",
     "categories": {
-      "problems": "",
-      "inquiries": "",
-      "hwid_reset": "",
-      "ai_aim": "",
-      "bot_lobby": ""
+      "middleman": "",
+      "house_unlock": "",
+      "purchase": ""
     }
   },
   "categories": [
     {
-      "key": "problems",
+      "key": "middleman",
       "enabled": true,
-      "label": "Problems",
-      "description": "إذا واجهتك مشكلة في أحد المنتجات، افتح تذكرة هنا.",
-      "channelNameTemplate": "problem-{ticketNumber}",
+      "label": "🤝 طلب وسيط مضمون",
+      "description": "لضمان عملية التداول بوجود وسيط، افتح تذكرة هنا.",
+      "channelNameTemplate": "middleman-{ticketNumber}",
       "supportRoleIds": [],
       "questions": [
         {
-          "key": "customer",
-          "label": "Are you a customer?",
+          "key": "epic_id",
+          "label": "ايديك EPIC",
           "style": "Short",
-          "placeholder": "نعم / لا",
+          "placeholder": "اكتب ايدي الـ EPIC الخاص بك",
           "required": true,
-          "minLength": 1,
+          "minLength": 3,
+          "maxLength": 100
+        }
+      ]
+    },
+    {
+      "key": "house_unlock",
+      "enabled": true,
+      "label": "🏠 فك بيوت",
+      "description": "لطلب فك البيوت الخاصة بك، افتح تذكرة هنا.",
+      "channelNameTemplate": "house-{ticketNumber}",
+      "supportRoleIds": [],
+      "questions": [
+        {
+          "key": "epic_id",
+          "label": "ايديك EPIC",
+          "style": "Short",
+          "placeholder": "اكتب ايدي الـ EPIC الخاص بك",
+          "required": true,
+          "minLength": 3,
+          "maxLength": 100
+        }
+      ]
+    },
+    {
+      "key": "purchase",
+      "enabled": true,
+      "label": "🛒 عملية شراء",
+      "description": "لإتمام عملية الشراء، افتح تذكرة هنا.",
+      "channelNameTemplate": "purchase-{ticketNumber}",
+      "supportRoleIds": [],
+      "questions": [
+        {
+          "key": "epic_id",
+          "label": "ايديك EPIC",
+          "style": "Short",
+          "placeholder": "اكتب ايدي الـ EPIC الخاص بك",
+          "required": true,
+          "minLength": 3,
           "maxLength": 100
         },
         {
-          "key": "product",
-          "label": "Your inquiry about any product?",
-          "style": "Short",
-          "placeholder": "اذكر المنتج أو الخدمة",
-          "required": true,
-          "minLength": 1,
-          "maxLength": 120
-        },
-        {
-          "key": "issue",
-          "label": "What is your inquiry?",
+          "key": "purchase_type",
+          "label": "وش عملية الشراء؟",
           "style": "Paragraph",
-          "placeholder": "اشرح المشكلة أو الاستفسار بالتفصيل",
+          "placeholder": "اشرح ماذا تريد شراء بالتفصيل",
           "required": true,
-          "minLength": 3,
-          "maxLength": 400
-        }
-      ]
-    },
-    {
-      "key": "inquiries",
-      "enabled": true,
-      "label": "For inquiries",
-      "description": "للاستفسارات حول أحد منتجات ساين، افتح تذكرة هنا.",
-      "channelNameTemplate": "inquiry-{ticketNumber}",
-      "supportRoleIds": [],
-      "questions": [
-        {
-          "key": "name",
-          "label": "ما اسمك؟",
-          "style": "Short",
-          "placeholder": "اكتب اسمك",
-          "required": true,
-          "minLength": 2,
-          "maxLength": 64
-        },
-        {
-          "key": "topic",
-          "label": "عن أي منتج أو خدمة تريد الاستفسار؟",
-          "style": "Short",
-          "placeholder": "اسم المنتج أو الخدمة",
-          "required": true,
-          "minLength": 2,
-          "maxLength": 100
-        },
-        {
-          "key": "details",
-          "label": "اكتب استفسارك",
-          "style": "Paragraph",
-          "placeholder": "اكتب التفاصيل الكاملة هنا",
-          "required": true,
-          "minLength": 3,
-          "maxLength": 400
-        }
-      ]
-    },
-    {
-      "key": "hwid_reset",
-      "enabled": true,
-      "label": "HWID Reset",
-      "description": "لإعادة تعيين المفتاح الخاص بك، افتح تذكرة هنا.",
-      "channelNameTemplate": "hwid-{ticketNumber}",
-      "supportRoleIds": [],
-      "questions": [
-        {
-          "key": "license_key",
-          "label": "ما هو المفتاح الخاص بك؟",
-          "style": "Short",
-          "placeholder": "ألصق المفتاح هنا",
-          "required": true,
-          "minLength": 4,
-          "maxLength": 150
-        },
-        {
-          "key": "reason",
-          "label": "لماذا تريد إعادة التعيين؟",
-          "style": "Paragraph",
-          "placeholder": "اشرح السبب",
-          "required": true,
-          "minLength": 3,
-          "maxLength": 300
-        }
-      ]
-    },
-    {
-      "key": "ai_aim",
-      "enabled": true,
-      "label": "AI AIM",
-      "description": "بالاستفسار عن منتج تتبع الألوان، افتح تذكرة هنا.",
-      "channelNameTemplate": "ai-aim-{ticketNumber}",
-      "supportRoleIds": [],
-      "questions": [
-        {
-          "key": "customer",
-          "label": "هل أنت عميل حالي؟",
-          "style": "Short",
-          "placeholder": "نعم / لا",
-          "required": true,
-          "minLength": 1,
-          "maxLength": 100
-        },
-        {
-          "key": "need",
-          "label": "ما الذي تحتاجه؟",
-          "style": "Paragraph",
-          "placeholder": "صف احتياجك بالتفصيل",
-          "required": true,
-          "minLength": 3,
-          "maxLength": 350
-        }
-      ]
-    },
-    {
-      "key": "bot_lobby",
-      "enabled": true,
-      "label": "Bot Lobby",
-      "description": "للمتابعة وتنفيذ طلبك الخاص بالبوت لديك، افتح تذكرة هنا.",
-      "channelNameTemplate": "bot-{ticketNumber}",
-      "supportRoleIds": [],
-      "questions": [
-        {
-          "key": "project_type",
-          "label": "ما نوع البوت الذي تريده؟",
-          "style": "Short",
-          "placeholder": "مثال: حماية، تكتات، متجر",
-          "required": true,
-          "minLength": 2,
-          "maxLength": 120
-        },
-        {
-          "key": "budget",
-          "label": "ما هي ميزانيتك؟",
-          "style": "Short",
-          "placeholder": "اكتب الميزانية التقريبية",
-          "required": true,
-          "minLength": 1,
-          "maxLength": 60
-        },
-        {
-          "key": "details",
-          "label": "اكتب تفاصيل طلبك",
-          "style": "Paragraph",
-          "placeholder": "كلما كانت التفاصيل أوضح كان التنفيذ أفضل",
-          "required": true,
-          "minLength": 3,
+          "minLength": 5,
           "maxLength": 400
         }
       ]

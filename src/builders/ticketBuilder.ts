@@ -42,7 +42,9 @@ export async function buildTicketEmbeds(
   config: AppConfig,
   ticket: TicketRecord,
 ): Promise<EmbedBuilder[]> {
-  const ticketIcon = await guild.emojis.fetch(config.emojis.ticketIcon).catch(() => null);
+  const ticketIcon = config.emojis.ticketIcon
+    ? await guild.emojis.fetch(config.emojis.ticketIcon).catch(() => null)
+    : null;
   const paddedNumber = padTicketNumber(ticket.ticket_number, config.naming.zeroPadLength);
 
   const welcomeEmbed = new EmbedBuilder()

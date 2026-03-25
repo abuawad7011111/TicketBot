@@ -20,7 +20,9 @@ function buildCategoryLines(config: AppConfig): string[] {
 }
 
 export async function buildPanelEmbeds(config: AppConfig, guild: Guild): Promise<EmbedBuilder[]> {
-  const panelIcon = await guild.emojis.fetch(config.emojis.panelIcon).catch(() => null);
+  const panelIcon = config.emojis.panelIcon
+    ? await guild.emojis.fetch(config.emojis.panelIcon).catch(() => null)
+    : null;
   const categoryLines = buildCategoryLines(config);
 
   const introEmbed = new EmbedBuilder()
