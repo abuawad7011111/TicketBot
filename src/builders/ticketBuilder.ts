@@ -99,15 +99,19 @@ export async function buildTicketEmbeds(
 }
 
 export function buildTicketActionRows(config: AppConfig): ActionRowBuilder<ButtonBuilder>[] {
-  return [
-    new ActionRowBuilder<ButtonBuilder>().addComponents(
-      buildButton(TICKET_BUTTON_IDS.close, config.ticket.controls.close),
-      buildButton(TICKET_BUTTON_IDS.add, config.ticket.controls.add),
-      buildButton(TICKET_BUTTON_IDS.remove, config.ticket.controls.remove),
-      buildButton(TICKET_BUTTON_IDS.claim, config.ticket.controls.claim),
-      buildButton(TICKET_BUTTON_IDS.pin, config.ticket.controls.pin),
-    ),
-  ];
+  const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    buildButton(TICKET_BUTTON_IDS.close, config.ticket.controls.close),
+    buildButton(TICKET_BUTTON_IDS.add, config.ticket.controls.add),
+    buildButton(TICKET_BUTTON_IDS.remove, config.ticket.controls.remove),
+    buildButton(TICKET_BUTTON_IDS.claim, config.ticket.controls.claim),
+    buildButton(TICKET_BUTTON_IDS.pin, config.ticket.controls.pin),
+  );
+
+  const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    buildButton(TICKET_BUTTON_IDS.stats, config.ticket.controls.stats),
+  );
+
+  return [row1, row2];
 }
 
 export function buildAlreadyOpenEmbed(config: AppConfig, channelId: string): EmbedBuilder {

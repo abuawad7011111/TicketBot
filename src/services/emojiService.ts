@@ -22,6 +22,7 @@ const BUTTON_EMOJI_URLS: Record<string, string> = {
   remove: `${TWEMOJI_BASE}/2796.png`,
   claim:  `${TWEMOJI_BASE}/2705.png`,
   pin:    `${TWEMOJI_BASE}/1f4cc.png`,
+  stats:  `${TWEMOJI_BASE}/1f4ca.png`,
 };
 
 async function downloadImage(url: string): Promise<Buffer> {

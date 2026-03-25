@@ -304,7 +304,18 @@ export class TicketService {
       return;
     }
 
-    await interaction.showModal(buildOpenTicketModal(category));
+    try {
+      const modal = buildOpenTicketModal(category);
+      await interaction.showModal(modal);
+    } catch (error) {
+      logger.error('Failed to show ticket modal', error instanceof Error ? error.message : error);
+      if (!interaction.replied && !interaction.deferred) {
+        await interaction.reply({
+          flags: MessageFlags.Ephemeral,
+          embeds: [buildErrorEmbed(this.config, 'تعذر فتح نموذج التذكرة، يرجى المحاولة مرة أخرى.')],
+        }).catch(() => null);
+      }
+    }
   }
 
   public async handleOpenModal(interaction: ModalSubmitInteraction): Promise<void> {
@@ -328,8 +339,18 @@ export class TicketService {
 
     const existing = await this.findExistingOpenTicket(interaction.guildId, interaction.user.id);
     if (existing?.channel_id) {
-      await interaction.editReply({ embeds: [buildAlreadyOpenEmbed(this.config, existing.channel_id)] });
-      return;
+      const existingChannel = await interaction.guild.channels.fetch(existing.channel_id).catch(() => null);
+      if (!existingChannel) {
+        await this.ticketRepository.closeByChannel(existing.channel_id, {
+          closed_by: interaction.user.id,
+          closed_by_tag: interaction.user.tag,
+          close_reason: 'Auto-closed: channel no longer exists',
+        }).catch(() => null);
+        logger.info(`Auto-closed stale ticket #${existing.ticket_number} (channel deleted)`);
+      } else {
+        await interaction.editReply({ embeds: [buildAlreadyOpenEmbed(this.config, existing.channel_id)] });
+        return;
+      }
     }
 
     const answers = this.buildAnswers(interaction, category);
@@ -529,6 +550,9 @@ export class TicketService {
         return;
       case TICKET_BUTTON_IDS.pin:
         await this.handlePinButton(interaction);
+        return;
+      case TICKET_BUTTON_IDS.stats:
+        await this.handleStatsButton(interaction);
         return;
       default:
         return;
@@ -826,6 +850,49 @@ export class TicketService {
         embeds: [buildErrorEmbed(this.config, 'تعذر تعديل أعضاء التذكرة حالياً.')],
       });
       return true;
+    }
+  }
+
+  private async handleStatsButton(interaction: ButtonInteraction): Promise<void> {
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+
+    const allowedRoles = this.config.ticket.controls.stats?.allowedRoleIds ?? [];
+    const member = interaction.member as GuildMember;
+    const hasRole = allowedRoles.length === 0 || allowedRoles.some((roleId) => member.roles.cache.has(roleId));
+
+    if (!hasRole) {
+      await interaction.editReply({ embeds: [buildErrorEmbed(this.config, this.config.ticket.messages.noPermission)] });
+      return;
+    }
+
+    const context = await this.resolveTicketContext(interaction);
+    if (!context) return;
+
+    try {
+      const stats = await this.ticketRepository.getStats(context.guild.id);
+
+      const embed = new EmbedBuilder()
+        .setColor(hexToDecimal(this.config.bot.embedColor))
+        .setTitle('إحصائيات التذاكر')
+        .addFields(
+          { name: 'التذاكر المفتوحة', value: `${stats.open}`, inline: true },
+          { name: 'التذاكر المغلقة', value: `${stats.closed}`, inline: true },
+          { name: 'إجمالي التذاكر', value: `${stats.total}`, inline: true },
+          { name: 'التذكرة الحالية', value: `#${padTicketNumber(context.ticket.ticket_number, this.config.naming.zeroPadLength)}`, inline: true },
+          { name: 'صاحب التذكرة', value: `<@${context.ticket.creator_id}>`, inline: true },
+          { name: 'الحالة', value: context.ticket.status === 'open' ? 'مفتوحة' : 'مغلقة', inline: true },
+        )
+        .setFooter({ text: this.config.bot.footerText })
+        .setTimestamp();
+
+      if (context.ticket.claimed_by) {
+        embed.addFields({ name: 'مستلمة بواسطة', value: `<@${context.ticket.claimed_by}>`, inline: true });
+      }
+
+      await interaction.editReply({ embeds: [embed] });
+    } catch (error) {
+      logger.error('Failed to fetch stats via button', error instanceof Error ? error.message : error);
+      await interaction.editReply({ embeds: [buildErrorEmbed(this.config, 'تعذر جلب الإحصائيات.')] });
     }
   }
 

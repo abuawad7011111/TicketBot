@@ -100,6 +100,17 @@
         "label": "تثبيت",
         "style": "Secondary",
         "emojiId": ""
+      },
+      "stats": {
+        "label": "إحصائيات",
+        "style": "Secondary",
+        "emojiId": "",
+        "allowedRoleIds": [
+          "1483021366792949760",
+          "1483038264393990164",
+          "1483020976966074479",
+          "1483212264025886886"
+        ]
       }
     },
     "messages": {
@@ -149,7 +160,7 @@
       "label": "فك بيوت",
       "description": "لطلب فك البيوت الخاصة بك، افتح تذكرة هنا.",
       "channelNameTemplate": "house-{ticketNumber}",
-      "supportRoleIds": [],
+      "supportRoleIds": ["1483209015961063595"],
       "questions": [
         {
           "key": "epic_id",

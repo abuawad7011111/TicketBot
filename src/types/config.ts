@@ -72,12 +72,17 @@ export interface TicketControlConfig {
   emojiId: string;
 }
 
+export interface StatsControlConfig extends TicketControlConfig {
+  allowedRoleIds: string[];
+}
+
 export interface TicketControlsConfig {
   close: TicketControlConfig;
   add: TicketControlConfig;
   remove: TicketControlConfig;
   claim: TicketControlConfig;
   pin: TicketControlConfig;
+  stats: StatsControlConfig;
 }
 
 export interface TicketMessagesConfig {

@@ -46,6 +46,7 @@ export class ConfigStore {
           remove: { ...this.config.ticket.controls.remove, emojiId: buttonEmojis.remove || this.config.ticket.controls.remove.emojiId },
           claim: { ...this.config.ticket.controls.claim, emojiId: buttonEmojis.claim || this.config.ticket.controls.claim.emojiId },
           pin: { ...this.config.ticket.controls.pin, emojiId: buttonEmojis.pin || this.config.ticket.controls.pin.emojiId },
+          stats: { ...this.config.ticket.controls.stats, emojiId: buttonEmojis.stats || this.config.ticket.controls.stats.emojiId },
         },
       },
     };

@@ -8,6 +8,7 @@ export const TICKET_BUTTON_IDS = {
   remove: 'ticket:btn:remove',
   claim: 'ticket:btn:claim',
   pin: 'ticket:btn:pin',
+  stats: 'ticket:btn:stats',
 } as const;
 
 export const MEMBER_MODAL_FIELD_ID = 'member_input';

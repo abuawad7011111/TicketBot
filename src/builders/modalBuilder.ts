@@ -2,6 +2,7 @@ import {
   ActionRowBuilder,
   ModalBuilder,
   TextInputBuilder,
+  TextInputStyle,
 } from 'discord.js';
 import {
   ADD_MEMBER_MODAL_ID,
@@ -10,7 +11,6 @@ import {
   REMOVE_MEMBER_MODAL_ID,
 } from '../constants/customIds.js';
 import type { TicketCategoryConfig } from '../types/config.js';
-import { textInputStyleFromName } from '../utils/discord.js';
 
 function truncate(value: string, maxLength: number): string {
   return value.length > maxLength ? value.slice(0, maxLength) : value;
@@ -22,14 +22,19 @@ export function buildOpenTicketModal(category: TicketCategoryConfig): ModalBuild
     .setTitle(truncate(category.label, 45));
 
   const rows = category.questions.map((question) => {
+    const style = question.style === 'Paragraph' ? TextInputStyle.Paragraph : TextInputStyle.Short;
     const input = new TextInputBuilder()
       .setCustomId(question.key)
       .setLabel(truncate(question.label, 45))
-      .setStyle(textInputStyleFromName(question.style))
-      .setRequired(question.required)
-      .setMinLength(question.minLength)
-      .setMaxLength(question.maxLength);
+      .setStyle(style)
+      .setRequired(question.required ?? true);
 
+    if (typeof question.minLength === 'number' && question.minLength > 0) {
+      input.setMinLength(question.minLength);
+    }
+    if (typeof question.maxLength === 'number' && question.maxLength > 0) {
+      input.setMaxLength(question.maxLength);
+    }
     if (question.placeholder) {
       input.setPlaceholder(truncate(question.placeholder, 100));
     }
@@ -57,9 +62,9 @@ function buildMemberModal(customId: string, title: string, placeholder: string):
 }
 
 export function buildAddMemberModal(): ModalBuilder {
-  return buildMemberModal(ADD_MEMBER_MODAL_ID, 'Add Member', '123456789012345678 أو @member');
+  return buildMemberModal(ADD_MEMBER_MODAL_ID, 'إضافة عضو', '123456789012345678 أو @member');
 }
 
 export function buildRemoveMemberModal(): ModalBuilder {
-  return buildMemberModal(REMOVE_MEMBER_MODAL_ID, 'Remove Member', '123456789012345678 أو @member');
+  return buildMemberModal(REMOVE_MEMBER_MODAL_ID, 'إزالة عضو', '123456789012345678 أو @member');
 }
