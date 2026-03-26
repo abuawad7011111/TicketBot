@@ -644,6 +644,10 @@ export class TicketService {
 
       await this.applyClaimPermissions(context, newClaimerId);
 
+      const nowClaimed = newClaimerId !== null;
+      const newComponents = buildTicketActionRows(this.config, nowClaimed);
+      await interaction.message.edit({ components: newComponents }).catch(() => null);
+
       const message = isClaimedBySelf
         ? `${this.config.ticket.messages.unclaimed}`
         : `${this.config.ticket.messages.claimed} ${interaction.user}`;

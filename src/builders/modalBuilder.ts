@@ -2,7 +2,6 @@ import {
   ActionRowBuilder,
   ModalBuilder,
   TextInputBuilder,
-  TextInputStyle,
 } from 'discord.js';
 import {
   ADD_MEMBER_MODAL_ID,
@@ -22,7 +21,7 @@ export function buildOpenTicketModal(category: TicketCategoryConfig): ModalBuild
     .setTitle(truncate(category.label, 45));
 
   const rows = category.questions.map((question) => {
-    const style = question.style === 'Paragraph' ? TextInputStyle.Paragraph : TextInputStyle.Short;
+    const style = question.style === 'Paragraph' ? 2 : 1;
     const input = new TextInputBuilder()
       .setCustomId(question.key)
       .setLabel(truncate(question.label, 45))

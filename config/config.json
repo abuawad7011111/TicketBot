@@ -102,7 +102,7 @@
       "stats": {
         "label": "إحصائيات",
         "style": "Secondary",
-        "emojiId": "",
+        "emojiId": "1486832130754482328",
         "allowedRoleIds": [
           "1483021366792949760",
           "1483038264393990164",
@@ -126,17 +126,19 @@
   "emojis": {
     "panelIcon": "",
     "ticketIcon": "",
+    "infoIcon": "1486832255216386109",
+    "epicIcon": "1486832108990107891",
     "categories": {
-      "middleman": "",
-      "house_unlock": "",
-      "purchase": ""
+      "middleman": "1486832234299134092",
+      "house_unlock": "1486832226875215987",
+      "purchase": "1486832176677781584"
     }
   },
   "categories": [
     {
       "key": "middleman",
       "enabled": true,
-      "label": "وسيط مضمون",
+      "label": "وسـيــط مـضـمـون",
       "description": "لضمان عملية التداول بوجود وسيط، افتح تذكرة هنا.",
       "channelNameTemplate": "middleman-{ticketNumber}",
       "supportRoleIds": ["1483021658003345408"],
@@ -155,8 +157,8 @@
     {
       "key": "house_unlock",
       "enabled": true,
-      "label": "الوان البيوت",
-      "description": "لطلب خدمة الوان البيوت، افتح تذكرة هنا.",
+      "label": "اللوان البيوت",
+      "description": "لطلب خدمة اللوان البيوت، افتح تذكرة هنا.",
       "channelNameTemplate": "house-{ticketNumber}",
       "supportRoleIds": ["1483209015961063595"],
       "questions": [
@@ -174,7 +176,7 @@
     {
       "key": "purchase",
       "enabled": true,
-      "label": "عملية شراء",
+      "label": "عـمـلـيـة شـرأء",
       "description": "لإتمام عملية الشراء، افتح تذكرة هنا.",
       "channelNameTemplate": "purchase-{ticketNumber}",
       "supportRoleIds": [],

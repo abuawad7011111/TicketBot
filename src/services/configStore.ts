@@ -32,21 +32,28 @@ export class ConfigStore {
   }
 
   public patchEmojis(categoryEmojis: Record<string, string>, buttonEmojis: Record<string, string>): void {
+    const pick = (configValue: string, autoValue: string | undefined) => configValue || autoValue || '';
+
+    const mergedCategories: Record<string, string> = { ...categoryEmojis };
+    for (const [key, value] of Object.entries(this.config.emojis.categories)) {
+      if (value) mergedCategories[key] = value;
+    }
+
     this.config = {
       ...this.config,
       emojis: {
         ...this.config.emojis,
-        categories: { ...this.config.emojis.categories, ...categoryEmojis },
+        categories: mergedCategories,
       },
       ticket: {
         ...this.config.ticket,
         controls: {
-          close: { ...this.config.ticket.controls.close, emojiId: buttonEmojis.close || this.config.ticket.controls.close.emojiId },
-          add: { ...this.config.ticket.controls.add, emojiId: buttonEmojis.add || this.config.ticket.controls.add.emojiId },
-          remove: { ...this.config.ticket.controls.remove, emojiId: buttonEmojis.remove || this.config.ticket.controls.remove.emojiId },
-          claim: { ...this.config.ticket.controls.claim, emojiId: buttonEmojis.claim || this.config.ticket.controls.claim.emojiId },
-          pin: { ...this.config.ticket.controls.pin, emojiId: buttonEmojis.pin || this.config.ticket.controls.pin.emojiId },
-          stats: { ...this.config.ticket.controls.stats, emojiId: buttonEmojis.stats || this.config.ticket.controls.stats.emojiId },
+          close: { ...this.config.ticket.controls.close, emojiId: pick(this.config.ticket.controls.close.emojiId, buttonEmojis.close) },
+          add: { ...this.config.ticket.controls.add, emojiId: pick(this.config.ticket.controls.add.emojiId, buttonEmojis.add) },
+          remove: { ...this.config.ticket.controls.remove, emojiId: pick(this.config.ticket.controls.remove.emojiId, buttonEmojis.remove) },
+          claim: { ...this.config.ticket.controls.claim, emojiId: pick(this.config.ticket.controls.claim.emojiId, buttonEmojis.claim) },
+          pin: { ...this.config.ticket.controls.pin, emojiId: pick(this.config.ticket.controls.pin.emojiId, buttonEmojis.pin) },
+          stats: { ...this.config.ticket.controls.stats, emojiId: pick(this.config.ticket.controls.stats.emojiId, buttonEmojis.stats) },
         },
       },
     };

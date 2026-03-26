@@ -118,6 +118,8 @@ export const appConfigSchema = z.object({
   emojis: z.object({
     panelIcon: z.string(),
     ticketIcon: z.string(),
+    infoIcon: z.string(),
+    epicIcon: z.string(),
     categories: z.record(z.string()),
   }),
   categories: z.array(categorySchema).min(1).max(25),

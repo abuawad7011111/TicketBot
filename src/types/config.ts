@@ -108,6 +108,8 @@ export interface TicketConfig {
 export interface EmojiConfig {
   panelIcon: string;
   ticketIcon: string;
+  infoIcon: string;
+  epicIcon: string;
   categories: Record<string, string>;
 }
 
