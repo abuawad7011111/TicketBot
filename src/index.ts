@@ -19,11 +19,14 @@ import { canManagePanels } from './services/permissionService.js';
 import { TicketService } from './services/ticketService.js';
 import { TranscriptService } from './services/transcriptService.js';
 import { activityTypeFromName } from './utils/discord.js';
-import { isInteractionLifecycleError, safeDeferReply, safeEditReply, safeReply } from './utils/interaction.js';
+import { consumeLifecycleErrors, isInteractionLifecycleError, safeDeferReply, safeEditReply, safeReply } from './utils/interaction.js';
 import { logger } from './utils/logger.js';
 import { buildErrorEmbed, buildSuccessEmbed } from './builders/ticketBuilder.js';
 
 const env = loadEnv();
+const INSTANCE_ID = Math.random().toString(36).slice(2, 8);
+let consecutiveInteractionFailures = 0;
+const DUPLICATE_THRESHOLD = 5;
 const configStore = new ConfigStore(env.CONFIG_PATH);
 const supabase = createSupabaseClient(env);
 const ticketRepository = new TicketRepository(supabase);
@@ -190,7 +193,7 @@ client.once(Events.ClientReady, async (readyClient) => {
     ],
   });
 
-  logger.info(`Logged in as ${readyClient.user.tag}`);
+  logger.info(`Logged in as ${readyClient.user.tag} [instance=${INSTANCE_ID}, pid=${process.pid}]`);
 
   try {
     await infrastructureService.ensureInfrastructure(readyClient);
@@ -206,26 +209,48 @@ client.once(Events.ClientReady, async (readyClient) => {
   }
 });
 
+function trackLifecycleHealth(): void {
+  const errors = consumeLifecycleErrors();
+  if (errors > 0) {
+    consecutiveInteractionFailures += errors;
+    if (consecutiveInteractionFailures >= DUPLICATE_THRESHOLD) {
+      logger.error(
+        `[instance=${INSTANCE_ID}] ${consecutiveInteractionFailures} consecutive interaction failures — ` +
+        'another bot instance is likely running with the same token. ' +
+        'This instance will destroy its gateway connection.',
+      );
+      client.destroy();
+      process.exit(1);
+    }
+  } else {
+    consecutiveInteractionFailures = 0;
+  }
+}
+
 client.on(Events.InteractionCreate, async (interaction) => {
   try {
     if (interaction.isChatInputCommand()) {
       await handleCommand(interaction);
+      trackLifecycleHealth();
       return;
     }
 
     if (interaction.isStringSelectMenu() && interaction.customId === configStore.current.panel.menuCustomId) {
       await ticketService.handleOpenSelect(interaction);
+      trackLifecycleHealth();
       return;
     }
 
     if (interaction.isModalSubmit()) {
       if (isOpenTicketModal(interaction.customId)) {
         await ticketService.handleOpenModal(interaction);
+        trackLifecycleHealth();
         return;
       }
 
       if (interaction.customId === ADD_MEMBER_MODAL_ID || interaction.customId === REMOVE_MEMBER_MODAL_ID) {
         await ticketService.handleMemberModal(interaction);
+        trackLifecycleHealth();
         return;
       }
     }
@@ -234,15 +259,17 @@ client.on(Events.InteractionCreate, async (interaction) => {
       const ticketButtonIds = Object.values(TICKET_BUTTON_IDS);
       if (ticketButtonIds.includes(interaction.customId as (typeof ticketButtonIds)[number])) {
         await ticketService.handleTicketButton(interaction);
+        trackLifecycleHealth();
       }
     }
   } catch (error) {
-    logger.error('Unhandled interaction error', error instanceof Error ? error.stack ?? error.message : error);
-
     if (isInteractionLifecycleError(error)) {
-      logger.warn('Skipping global error response because interaction already expired.');
+      consecutiveInteractionFailures++;
+      trackLifecycleHealth();
       return;
     }
+
+    logger.error('Unhandled interaction error', error instanceof Error ? error.stack ?? error.message : error);
 
     const errorEmbeds = [buildErrorEmbed(configStore.current, 'حدث خطأ غير متوقع أثناء تنفيذ العملية.')];
 
@@ -267,6 +294,15 @@ process.on('unhandledRejection', (reason) => {
 process.on('uncaughtException', (error) => {
   logger.error('Uncaught exception', error.stack ?? error.message);
 });
+
+function gracefulShutdown(signal: string): void {
+  logger.info(`[instance=${INSTANCE_ID}] Received ${signal}, destroying gateway connection...`);
+  client.destroy();
+  process.exit(0);
+}
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
 client.login(env.DISCORD_TOKEN).catch((error) => {
   logger.error('Failed to login', error instanceof Error ? error.message : error);

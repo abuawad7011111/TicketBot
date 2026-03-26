@@ -16,6 +16,14 @@ type AnyRepliableInteraction =
   | ModalSubmitInteraction
   | StringSelectMenuInteraction;
 
+let _pendingLifecycleErrors = 0;
+
+export function consumeLifecycleErrors(): number {
+  const count = _pendingLifecycleErrors;
+  _pendingLifecycleErrors = 0;
+  return count;
+}
+
 const DISCORD_UNKNOWN_INTERACTION = 10062;
 const DISCORD_ALREADY_ACKNOWLEDGED = 40060;
 const DISCORD_INTERACTION_NOT_ACTIVE = 40004;
@@ -64,6 +72,7 @@ export async function safeDeferReply(
     return true;
   } catch (error) {
     if (isInteractionLifecycleError(error)) {
+      _pendingLifecycleErrors++;
       const age = interactionAge(interaction);
       logger.warn(`[${label ?? interaction.id}] deferReply skipped (${age}ms old): ${error instanceof Error ? error.message : error}`);
       return false;
@@ -126,6 +135,7 @@ export async function safeShowModal(
     return true;
   } catch (error) {
     if (isInteractionLifecycleError(error)) {
+      _pendingLifecycleErrors++;
       const age = interactionAge(interaction);
       logger.warn(`[${label ?? interaction.id}] showModal skipped (${age}ms old): ${error instanceof Error ? error.message : error}`);
       return false;
