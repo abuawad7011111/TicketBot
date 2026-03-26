@@ -77,6 +77,10 @@ export class TicketService {
     return this.configStore.current;
   }
 
+  private isUnknownInteractionError(error: unknown): boolean {
+    return error instanceof Error && error.message.includes('Unknown interaction');
+  }
+
   private getEnabledCategory(categoryKey: string): TicketCategoryConfig | undefined {
     return this.config.categories.find((category) => category.enabled && category.key === categoryKey);
   }
@@ -289,7 +293,7 @@ export class TicketService {
 
   public async handleOpenSelect(interaction: StringSelectMenuInteraction): Promise<void> {
     if (!interaction.inCachedGuild()) {
-      await interaction.reply({ flags: MessageFlags.Ephemeral, embeds: [buildErrorEmbed(this.config, 'This action only works inside the guild.')] });
+      await interaction.reply({ flags: MessageFlags.Ephemeral, embeds: [buildErrorEmbed(this.config, 'This action only works inside the guild.')] }).catch(() => null);
       return;
     }
 
@@ -309,6 +313,10 @@ export class TicketService {
       await interaction.showModal(modal);
     } catch (error) {
       logger.error('Failed to show ticket modal', error instanceof Error ? error.message : error);
+      if (this.isUnknownInteractionError(error)) {
+        return;
+      }
+
       if (!interaction.replied && !interaction.deferred) {
         await interaction.reply({
           flags: MessageFlags.Ephemeral,
@@ -320,7 +328,7 @@ export class TicketService {
 
   public async handleOpenModal(interaction: ModalSubmitInteraction): Promise<void> {
     if (!interaction.inCachedGuild()) {
-      await interaction.reply({ flags: MessageFlags.Ephemeral, embeds: [buildErrorEmbed(this.config, 'This action only works inside the guild.')] });
+      await interaction.reply({ flags: MessageFlags.Ephemeral, embeds: [buildErrorEmbed(this.config, 'This action only works inside the guild.')] }).catch(() => null);
       return;
     }
 
@@ -331,11 +339,20 @@ export class TicketService {
       await interaction.reply({
         flags: MessageFlags.Ephemeral,
         embeds: [buildErrorEmbed(this.config, 'تعذر تحديد بيانات هذه التذكرة.')],
-      });
+      }).catch(() => null);
       return;
     }
 
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    try {
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    } catch (error) {
+      if (this.isUnknownInteractionError(error)) {
+        logger.warn('Skipped open modal deferReply because interaction expired.');
+        return;
+      }
+
+      throw error;
+    }
 
     const existing = await this.findExistingOpenTicket(interaction.guildId, interaction.user.id);
     if (existing?.channel_id) {
@@ -348,7 +365,7 @@ export class TicketService {
         }).catch(() => null);
         logger.info(`Auto-closed stale ticket #${existing.ticket_number} (channel deleted)`);
       } else {
-        await interaction.editReply({ embeds: [buildAlreadyOpenEmbed(this.config, existing.channel_id)] });
+        await interaction.editReply({ embeds: [buildAlreadyOpenEmbed(this.config, existing.channel_id)] }).catch(() => null);
         return;
       }
     }
@@ -423,7 +440,7 @@ export class TicketService {
         embeds: [
           buildSuccessEmbed(this.config, 'تم إنشاء التذكرة', `${this.config.ticket.messages.created} <#${created.id}>`),
         ],
-      });
+      }).catch(() => null);
     } catch (error) {
       logger.error('Failed to open ticket', error instanceof Error ? error.message : error);
 
@@ -442,7 +459,7 @@ export class TicketService {
         if (!existingChannelId) {
           await interaction.editReply({
             embeds: [buildErrorEmbed(this.config, 'تم اكتشاف تذكرة مفتوحة لكن تعذر تحديد القناة الخاصة بها.')],
-          });
+          }).catch(() => null);
           return;
         }
 
@@ -450,13 +467,13 @@ export class TicketService {
           embeds: [
             buildAlreadyOpenEmbed(this.config, existingChannelId),
           ],
-        });
+        }).catch(() => null);
         return;
       }
 
       await interaction.editReply({
         embeds: [buildErrorEmbed(this.config, 'حدث خطأ أثناء إنشاء التذكرة.')],
-      });
+      }).catch(() => null);
     }
   }
 

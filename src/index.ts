@@ -49,6 +49,55 @@ const client = new Client({
   partials: [Partials.Channel, Partials.Message],
 });
 
+function isUnknownInteractionError(error: unknown): boolean {
+  return error instanceof Error && error.message.includes('Unknown interaction');
+}
+
+async function safeReply(interaction: ChatInputCommandInteraction, description: string): Promise<boolean> {
+  try {
+    await interaction.reply({
+      flags: MessageFlags.Ephemeral,
+      embeds: [buildErrorEmbed(configStore.current, description)],
+    });
+    return true;
+  } catch (error) {
+    if (isUnknownInteractionError(error)) {
+      logger.warn('Skipped reply because interaction expired.');
+      return false;
+    }
+
+    throw error;
+  }
+}
+
+async function safeDeferReply(interaction: ChatInputCommandInteraction): Promise<boolean> {
+  try {
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    return true;
+  } catch (error) {
+    if (isUnknownInteractionError(error)) {
+      logger.warn(`Skipped deferReply for expired interaction: ${interaction.commandName}`);
+      return false;
+    }
+
+    throw error;
+  }
+}
+
+async function safeEditReply(interaction: ChatInputCommandInteraction, embed: ReturnType<typeof buildErrorEmbed> | ReturnType<typeof buildSuccessEmbed>): Promise<boolean> {
+  try {
+    await interaction.editReply({ embeds: [embed] });
+    return true;
+  } catch (error) {
+    if (isUnknownInteractionError(error)) {
+      logger.warn(`Skipped editReply for expired interaction: ${interaction.commandName}`);
+      return false;
+    }
+
+    throw error;
+  }
+}
+
 async function syncCommands(): Promise<void> {
   const config = configStore.current;
 
@@ -63,18 +112,12 @@ async function syncCommands(): Promise<void> {
 
 async function ensurePanelManager(interaction: ChatInputCommandInteraction): Promise<boolean> {
   if (!interaction.inCachedGuild() || !interaction.member) {
-    await interaction.reply({
-      flags: MessageFlags.Ephemeral,
-      embeds: [buildErrorEmbed(configStore.current, 'This command only works inside the configured guild.')],
-    });
+    await safeReply(interaction, 'This command only works inside the configured guild.');
     return false;
   }
 
   if (!canManagePanels(interaction.member, configStore.current)) {
-    await interaction.reply({
-      flags: MessageFlags.Ephemeral,
-      embeds: [buildErrorEmbed(configStore.current, configStore.current.ticket.messages.noPermission)],
-    });
+    await safeReply(interaction, configStore.current.ticket.messages.noPermission);
     return false;
   }
 
@@ -89,13 +132,11 @@ async function handleCommand(interaction: ChatInputCommandInteraction): Promise<
       return;
     }
 
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    if (!(await safeDeferReply(interaction))) {
+      return;
+    }
     const message = await panelService.sendPanel(interaction.guild!);
-    await interaction.editReply({
-      embeds: [
-        buildSuccessEmbed(configStore.current, 'Panel Sent', `Panel has been sent successfully.\nMessage ID: \`${message.id}\``),
-      ],
-    });
+    await safeEditReply(interaction, buildSuccessEmbed(configStore.current, 'Panel Sent', `Panel has been sent successfully.\nMessage ID: \`${message.id}\``));
     return;
   }
 
@@ -104,14 +145,12 @@ async function handleCommand(interaction: ChatInputCommandInteraction): Promise<
       return;
     }
 
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    if (!(await safeDeferReply(interaction))) {
+      return;
+    }
     const messageId = interaction.options.getString('message-id') ?? undefined;
     const message = await panelService.refreshPanel(interaction.guild!, messageId);
-    await interaction.editReply({
-      embeds: [
-        buildSuccessEmbed(configStore.current, 'Panel Refreshed', `Panel has been refreshed.\nMessage ID: \`${message.id}\``),
-      ],
-    });
+    await safeEditReply(interaction, buildSuccessEmbed(configStore.current, 'Panel Refreshed', `Panel has been refreshed.\nMessage ID: \`${message.id}\``));
     return;
   }
 
@@ -120,7 +159,9 @@ async function handleCommand(interaction: ChatInputCommandInteraction): Promise<
       return;
     }
 
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    if (!(await safeDeferReply(interaction))) {
+      return;
+    }
     configStore.reload();
     
     try {
@@ -130,9 +171,7 @@ async function handleCommand(interaction: ChatInputCommandInteraction): Promise<
     }
 
     await syncCommands();
-    await interaction.editReply({
-      embeds: [buildSuccessEmbed(configStore.current, 'Config Reloaded', 'تم إعادة تحميل config.json وتحديث الأوامر.')],
-    });
+    await safeEditReply(interaction, buildSuccessEmbed(configStore.current, 'Config Reloaded', 'تم إعادة تحميل config.json وتحديث الأوامر.'));
     return;
   }
 
@@ -141,7 +180,9 @@ async function handleCommand(interaction: ChatInputCommandInteraction): Promise<
       return;
     }
 
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    if (!(await safeDeferReply(interaction))) {
+      return;
+    }
 
     try {
       const guild = interaction.guild!;
@@ -149,25 +190,23 @@ async function handleCommand(interaction: ChatInputCommandInteraction): Promise<
       const { ensureEmojis } = await import('./services/emojiService.js');
       const emojis = await ensureEmojis(guild, categoryKeys, true);
       configStore.patchEmojis(emojis.categoryEmojis, emojis.buttonEmojis);
-      await interaction.editReply({
-        embeds: [buildSuccessEmbed(configStore.current, 'Emojis Refreshed', `تم تحديث جميع الإيموجيات بنجاح.\nCategories: ${Object.keys(emojis.categoryEmojis).length}\nButtons: ${Object.keys(emojis.buttonEmojis).length}`)],
-      });
+      await safeEditReply(interaction, buildSuccessEmbed(configStore.current, 'Emojis Refreshed', `تم تحديث جميع الإيموجيات بنجاح.\nCategories: ${Object.keys(emojis.categoryEmojis).length}\nButtons: ${Object.keys(emojis.buttonEmojis).length}`));
     } catch (error) {
       logger.error('Failed to refresh emojis', error instanceof Error ? error.message : error);
-      await interaction.editReply({
-        embeds: [buildErrorEmbed(configStore.current, 'تعذر تحديث الإيموجيات.')],
-      });
+      await safeEditReply(interaction, buildErrorEmbed(configStore.current, 'تعذر تحديث الإيموجيات.'));
     }
     return;
   }
 
   if (interaction.commandName === config.commands.names.ticketClose) {
     if (!interaction.inCachedGuild()) {
-      await interaction.reply({ flags: MessageFlags.Ephemeral, embeds: [buildErrorEmbed(configStore.current, 'هذا الأمر يعمل داخل السيرفر فقط.')] });
+      await safeReply(interaction, 'هذا الأمر يعمل داخل السيرفر فقط.');
       return;
     }
 
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    if (!(await safeDeferReply(interaction))) {
+      return;
+    }
     const reason = interaction.options.getString('reason') ?? 'Closed via command';
     await ticketService.handleSlashClose(interaction, reason);
     return;
@@ -178,7 +217,9 @@ async function handleCommand(interaction: ChatInputCommandInteraction): Promise<
       return;
     }
 
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    if (!(await safeDeferReply(interaction))) {
+      return;
+    }
     await ticketService.handleSlashStats(interaction);
     return;
   }
@@ -245,6 +286,11 @@ client.on(Events.InteractionCreate, async (interaction) => {
     }
   } catch (error) {
     logger.error('Unhandled interaction error', error instanceof Error ? error.stack ?? error.message : error);
+
+    if (isUnknownInteractionError(error)) {
+      logger.warn('Skipping global error response because interaction already expired.');
+      return;
+    }
 
     const errorEmbeds = [buildErrorEmbed(configStore.current, 'حدث خطأ غير متوقع أثناء تنفيذ العملية.')];
 
